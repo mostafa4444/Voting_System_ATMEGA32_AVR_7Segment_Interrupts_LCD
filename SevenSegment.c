@@ -6,70 +6,32 @@
 */
 
 #include "SevenSegent.h"
-volatile char flag = 0;
-int team_a_score = 28;
-int team_b_score = 25;
-int A_Try[2] = {0 , 0};
-int B_Try[2] = {0 , 0};
 
-
-ISR(INT2_vect){
-	flag = 1;
-	++team_a_score;
-	if(getCount(team_a_score) > 1){
-		A_Try[0] = firstDigit(team_a_score);
-		A_Try[1] = lastDigit(team_a_score);
-	}else{
-		A_Try[0] = 0;
-		A_Try[1] = team_a_score;
-	}
-}
-
-ISR(INT1_vect){
-	flag = 2;
-	++team_b_score;
-	if(getCount(team_b_score) > 1){
-		B_Try[0] = firstDigit(team_b_score);
-		B_Try[1] = lastDigit(team_b_score);
-	}else{
-		B_Try[0] = 0;
-		B_Try[1] = team_b_score;
-	}
-}
-
-
+extern volatile char flag;
+extern int team_a_score;
+extern int team_b_score;
 void SS_INIT(){
 	LCD_INIT();
 	LCD_STRING("Let's Play Game");
 	LCD_StringPos(2 , 0 , "---Start Now---");
-	INIT_Interrupts();
-}
-
-void INIT_Interrupts(){
-	//D3  B2
-	Set_Bit(GICR , 7);
-	Set_Bit(GICR , 5);
-	Set_Bit(MCUCR , 0);
-	Set_Bit(MCUCR , 1);
-	sei();
 }
 
 
-void show_Timer(){
+void show_Timer(int *A_try , int *B_Try){
 
 	for(int count = 0; count <= 9 ; count++){
 		for(int data = 0; data <= 9 ; data++){
 			if(flag == 1){
-				INIT_TeamA();
+				INIT_TeamA(A_try);
 				flag = 0;
 			}
 			if(flag == 2){
-				INIT_TeamB();
+				INIT_TeamB(B_Try);
 				flag = 0;
 			}
 			TSeg_Data_PORT = (TSeg_Data_PORT & (0x0F))|(data<<4);
 			DIO_WriteChannel(TEN1 , STD_Higt);
-			_delay_ms(10);
+			_delay_ms(5);
 			DIO_WriteChannel(TEN1 , STD_Low);
 			TSeg_Data_PORT = (TSeg_Data_PORT & (0x0F))|(count<<4);
 			DIO_WriteChannel(TEN2 , STD_Higt);
@@ -90,33 +52,62 @@ void show_Timer(){
 
 			}
 		}
-		_delay_ms(10);
+		_delay_ms(5);
 	}
 
 }
 
-void INIT_TeamA(){
-	ASeg_Data_PORT = (ASeg_Data_PORT & (0xF0))|(A_Try[1]<<4);
-	DIO_WriteChannel(AEN1 , STD_Higt);
-	_delay_ms(10);
+void INIT_TeamA(int *A_Try){
+	DIO_WriteChannel(AEN2 , STD_Low);
 	DIO_WriteChannel(AEN1 , STD_Low);
+	if (A_Try[0] == 0)
+	{
+		TSeg_Data_PORT = (TSeg_Data_PORT & (0xF0))|(A_Try[0]);
+		DIO_WriteChannel(AEN2 , STD_Higt);
+		_delay_ms(5);
+		DIO_WriteChannel(AEN2 , STD_Low);
+		
+		
+		TSeg_Data_PORT = (TSeg_Data_PORT & (0xF0))|(A_Try[1]);
+		DIO_WriteChannel(AEN1 , STD_Higt);
+		_delay_ms(5);
+	}else{
+		TSeg_Data_PORT = (TSeg_Data_PORT & (0xF0))|(A_Try[1]);
+		DIO_WriteChannel(AEN1 , STD_Higt);
+		_delay_ms(5);
+		DIO_WriteChannel(AEN1 , STD_Low);
+		
+		
+		TSeg_Data_PORT = (TSeg_Data_PORT & (0xF0))|(A_Try[0]);
+		DIO_WriteChannel(AEN2 , STD_Higt);
+		_delay_ms(5);
+	}
 	
-	
-	ASeg_Data_PORT = (ASeg_Data_PORT & (0xF0))|(A_Try[0]<<4);
-	DIO_WriteChannel(AEN2 , STD_Higt);
-	_delay_ms(10);
 }
-void INIT_TeamB(){
-	
-	BSeg_Data_PORT = (BSeg_Data_PORT & (0x0F))|(B_Try[1]<<4);
-	DIO_WriteChannel(BEN1 , STD_Higt);
-	_delay_ms(10);
+void INIT_TeamB(int *B_Try){
+	DIO_WriteChannel(BEN2 , STD_Low);
 	DIO_WriteChannel(BEN1 , STD_Low);
-	
-	
-	BSeg_Data_PORT = (BSeg_Data_PORT & (0x0F))|(B_Try[0]<<4);
-	DIO_WriteChannel(BEN2 , STD_Higt);
-	_delay_ms(10);
+	if(B_Try[0] == 0){
+		BSeg_Data_PORT = (BSeg_Data_PORT & (0x0F))|(B_Try[0]<<4);
+		DIO_WriteChannel(BEN2 , STD_Higt);
+		_delay_ms(5);
+		DIO_WriteChannel(BEN2 , STD_Low);
+		
+		
+		BSeg_Data_PORT = (BSeg_Data_PORT & (0x0F))|(B_Try[1]<<4);
+		DIO_WriteChannel(BEN1 , STD_Higt);
+		_delay_ms(5);
+	}else{
+		BSeg_Data_PORT = (BSeg_Data_PORT & (0x0F))|(B_Try[1]<<4);
+		DIO_WriteChannel(BEN1 , STD_Higt);
+		_delay_ms(5);
+		DIO_WriteChannel(BEN1 , STD_Low);
+		
+		
+		BSeg_Data_PORT = (BSeg_Data_PORT & (0x0F))|(B_Try[0]<<4);
+		DIO_WriteChannel(BEN2 , STD_Higt);
+		_delay_ms(5);
+	}
 }
 
 

@@ -26,10 +26,9 @@
 
 
 void SS_INIT();
-void show_Timer();
-void INIT_TeamA();
-void INIT_TeamB();
-void INIT_Interrupts();
+void show_Timer(int *A_Try , int *B_Try);
+void INIT_TeamA(int *A_Try);
+void INIT_TeamB(int *B_Try);
 void start_interrupts();
 int firstDigit(int a);
 int lastDigit(int a);
